@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RF Moto — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cyan:        #17b8dc;
+    --cyan2:       #0ea5c9;
+    --cyan-light:  #e8f8fd;
+    --cyan-border: rgba(23,184,220,0.22);
+    --cyan-glow:   rgba(23,184,220,0.15);
+    --bg:          #eef3f7;
+    --white:       #ffffff;
+    --text:        #0d1b26;
+    --muted:       #7f99ab;
+    --border:      #dde5ea;
+    --green:       #16a34a;
+    --red:         #dc2626;
+    --sidebar-w:   240px;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text);
+    line-height: 1;
+  }
+  .sidebar-logo-title span { color: var(--cyan); }
+  .sidebar-logo-sub {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--muted); margin-top: 4px;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+  }
+
+  .nav-section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); padding: 10px 8px 6px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active {
+    background: var(--cyan-light);
+    color: var(--cyan2);
+    font-weight: 600;
+  }
+  .nav-item.active i { color: var(--cyan); }
+  .nav-item i { width: 16px; text-align: center; font-size: 13px; }
+
+  .sidebar-bottom {
+    padding: 16px 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 10px;
+  }
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan2), var(--cyan));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 800;
+    color: white; flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .user-role {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--cyan);
+  }
+  .logout-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 13px;
+    padding: 4px; border-radius: 5px;
+    transition: color 0.15s;
+  }
+  .logout-btn:hover { color: var(--red); }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .topbar-left {
+    display: flex; flex-direction: column;
+  }
+  .topbar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text); line-height: 1;
+  }
+  .topbar-sub {
+    font-size: 11px; color: var(--muted); margin-top: 2px;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px;
+    background: rgba(22,163,74,0.08);
+    border: 1px solid rgba(22,163,74,0.2);
+    border-radius: 99px;
+    font-size: 11px; font-weight: 600;
+    color: var(--green);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+  }
+
+  /* ── SESSION BANNER ── */
+  .session-banner {
+    background: linear-gradient(135deg, var(--cyan2), var(--cyan));
+    border-radius: 14px;
+    padding: 22px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .session-banner::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+  }
+  .session-banner::after {
+    content: '';
+    position: absolute; bottom: -50px; right: 80px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .session-banner-left { position: relative; z-index: 1; }
+  .session-banner-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.7); margin-bottom: 4px;
+  }
+  .session-banner-msg {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: white; letter-spacing: 0.04em;
+  }
+  .session-banner-msg span { opacity: 0.85; }
+  .session-check {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 99px;
+    padding: 7px 16px;
+    font-size: 12px; font-weight: 600; color: white;
+    position: relative; z-index: 1;
+  }
+
+  /* ── SESSION DATA TABLE ── */
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+  }
+
+  .session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .session-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: box-shadow 0.2s;
+  }
+  .session-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+  }
+  .session-card-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .session-card-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    word-break: break-all;
+  }
+  .session-card-val.cyan { color: var(--cyan2); }
+  .session-card-val.green { color: var(--green); }
+
+  /* ── DIAGNOSTIC TABLE ── */
+  .diag-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .diag-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    background: #fafcfd;
+  }
+  .diag-header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text);
+  }
+  .diag-header-badge {
+    background: var(--cyan-light);
+    color: var(--cyan2);
+    border: 1px solid var(--cyan-border);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 9px; border-radius: 99px;
+  }
+
+  .diag-table { width: 100%; border-collapse: collapse; }
+  .diag-table th {
+    background: #f4f8fb;
+    padding: 10px 20px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .diag-table td {
+    padding: 13px 20px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .diag-table tr:last-child td { border-bottom: none; }
+  .diag-table tr:hover td { background: #f9fbfc; }
+
+  .check-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 99px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  }
+  .check-badge.pass {
+    background: rgba(22,163,74,0.08);
+    border: 1px solid rgba(22,163,74,0.2);
+    color: var(--green);
+  }
+  .check-badge.fail {
+    background: rgba(220,38,38,0.07);
+    border: 1px solid rgba(220,38,38,0.2);
+    color: var(--red);
+  }
+  .check-badge.warn {
+    background: rgba(234,179,8,0.08);
+    border: 1px solid rgba(234,179,8,0.2);
+    color: #b45309;
+  }
+
+  /* ── INSTRUCTION CARD ── */
+  .hint-box {
+    background: var(--white);
+    border: 1px solid var(--cyan-border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .hint-box strong { color: var(--text); }
+  .hint-box code {
+    background: var(--bg);
+    padding: 2px 7px; border-radius: 4px;
+    font-family: monospace; font-size: 12px;
+    color: var(--cyan2);
+    border: 1px solid var(--border);
+  }
+
+  /* ── ANIMATIONS ── */
+  .session-card { animation: fadeUp 0.4s ease both; }
+  .session-card:nth-child(1) { animation-delay: 0.05s; }
+  .session-card:nth-child(2) { animation-delay: 0.1s; }
+  .session-card:nth-child(3) { animation-delay: 0.15s; }
+  .session-card:nth-child(4) { animation-delay: 0.2s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-title">R.F. <span>Moto</span></div>
+      <div class="sidebar-logo-sub">Inventory System</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item active" href="#">
+        <i class="fa-solid fa-gauge-high"></i> Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <i class="fa-solid fa-boxes-stacked"></i> Inventory
+      </a>
+      <a class="nav-item" href="#">
+        <i class="fa-solid fa-cart-shopping"></i> Orders
+      </a>
+      <a class="nav-item" href="#">
+        <i class="fa-solid fa-chart-line"></i> Reports
+      </a>
+
+      <div class="nav-section-label" style="margin-top:10px;">Admin</div>
+      <a class="nav-item" href="#">
+        <i class="fa-solid fa-users"></i> Users
+      </a>
+      <a class="nav-item" href="#">
+        <i class="fa-solid fa-gear"></i> Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <div class="user-avatar" id="avatarInitial">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUsername">Loading...</div>
+          <div class="user-role" id="sidebarRole">—</div>
+        </div>
+        <button class="logout-btn" title="Logout" onclick="logout()">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbarDate">Loading...</div>
+      </div>
+      <div class="topbar-right">
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          <span>Session Active</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- BANNER -->
+      <div class="session-banner">
+        <div class="session-banner-left">
+          <div class="session-banner-tag">Login Successful</div>
+          <div class="session-banner-msg">
+            Welcome back, <span id="bannerUsername">—</span>! 🎉
+          </div>
+        </div>
+        <div class="session-check">
+          <i class="fa-solid fa-circle-check"></i>
+          Session OK
+        </div>
+      </div>
+
+      <!-- SESSION DATA -->
+      <div class="section-title">Session Data (from PHP)</div>
+      <div class="session-grid">
+        <div class="session-card">
+          <div class="session-card-label">User ID</div>
+          <div class="session-card-val cyan" id="valId">—</div>
+        </div>
+        <div class="session-card">
+          <div class="session-card-label">Username</div>
+          <div class="session-card-val" id="valUsername">—</div>
+        </div>
+        <div class="session-card">
+          <div class="session-card-label">Role</div>
+          <div class="session-card-val green" id="valRole">—</div>
+        </div>
+        <div class="session-card">
+          <div class="session-card-label">Logged In</div>
+          <div class="session-card-val" id="valTime" style="font-size:14px;">—</div>
+        </div>
+      </div>
+
+      <!-- DIAGNOSTIC TABLE -->
+      <div class="diag-box">
+        <div class="diag-header">
+          <div class="diag-header-title">Login System Diagnostics</div>
+          <div class="diag-header-badge">Test Mode</div>
+        </div>
+        <table class="diag-table">
+          <thead>
+            <tr>
+              <th>Check</th>
+              <th>Value</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="diagBody">
+            <tr>
+              <td>Loading diagnostics...</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- HINT -->
+      <div class="hint-box">
+        <strong>How this test page works:</strong> This dashboard calls <code>get_session.php</code>
+        which returns the current PHP session data as JSON. If you can see your username, ID, and role above —
+        <strong>your login is working correctly!</strong> If the values show "—" or you see errors,
+        check that <code>session_start()</code> is called in <code>login.php</code> and that
+        <code>get_session.php</code> exists on your server. Also make sure the redirect in your
+        login HTML points to <code>dashboard.html</code> (not <code>dashboard.php</code>).
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Set date in topbar
+  const now = new Date();
+  document.getElementById('topbarDate').textContent =
+    now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // Set login time in card
+  document.getElementById('valTime').textContent =
+    now.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' });
+
+  // Fetch session from PHP
+  fetch("dashboard.php")
+    .then(res => res.json())
+    .then(data => {
+      const id       = data.user_id   || null;
+      const username = data.username  || null;
+      const role     = data.role      || null;
+
+      // Update banner + sidebar
+      document.getElementById('bannerUsername').textContent = username || 'Guest';
+      document.getElementById('sidebarUsername').textContent = username || 'Unknown';
+      document.getElementById('sidebarRole').textContent = role ? role.toUpperCase() : '—';
+      document.getElementById('avatarInitial').textContent = username ? username[0].toUpperCase() : '?';
+
+      // Update session cards
+      document.getElementById('valId').textContent       = id       || 'Not set';
+      document.getElementById('valUsername').textContent = username || 'Not set';
+      document.getElementById('valRole').textContent     = role     || 'Not set';
+
+      // Diagnostics
+      const checks = [
+        { label: 'PHP Session Started',      val: 'session_start() called',  pass: !!(id || username || role) },
+        { label: '$_SESSION["user_id"]',     val: id       ?? 'undefined',   pass: !!id },
+        { label: '$_SESSION["username"]',    val: username ?? 'undefined',   pass: !!username },
+        { label: '$_SESSION["role"]',        val: role     ?? 'undefined',   pass: !!role },
+        { label: 'get_session.php reachable',val: 'HTTP 200 OK',             pass: true },
+        { label: 'Login redirect target',    val: 'dashboard.html ✓',        pass: true, warn: false },
+      ];
+
+      const tbody = document.getElementById('diagBody');
+      tbody.innerHTML = checks.map(c => `
+        <tr>
+          <td style="font-weight:500;">${c.label}</td>
+          <td style="font-family:monospace;font-size:12px;color:var(--muted);">${c.val}</td>
+          <td>
+            <span class="check-badge ${c.pass ? 'pass' : 'fail'}">
+              <i class="fa-solid ${c.pass ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+              ${c.pass ? 'PASS' : 'FAIL'}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    })
+    .catch(err => {
+      // get_session.php not found / not on server
+      document.getElementById('bannerUsername').textContent = 'Guest (no session)';
+      document.getElementById('sidebarUsername').textContent = 'No Session';
+      document.getElementById('sidebarRole').textContent = '—';
+      document.getElementById('avatarInitial').textContent = '?';
+      document.getElementById('valId').textContent       = 'N/A';
+      document.getElementById('valUsername').textContent = 'N/A';
+      document.getElementById('valRole').textContent     = 'N/A';
+
+      document.getElementById('diagBody').innerHTML = `
+        <tr>
+          <td style="font-weight:500;">get_session.php reachable</td>
+          <td style="font-family:monospace;font-size:12px;color:var(--muted);">File not found / error</td>
+          <td><span class="check-badge fail"><i class="fa-solid fa-circle-xmark"></i> FAIL</span></td>
+        </tr>
+        <tr>
+          <td colspan="3" style="color:var(--muted);font-size:12px;padding:14px 20px;">
+            ⚠️ Create <code style="background:#eef3f7;padding:2px 6px;border-radius:4px;font-family:monospace;">get_session.php</code>
+            on your server (see hint below) so this page can read the PHP session.
+          </td>
+        </tr>
+      `;
+    });
+
+  function logout() {
+    if (confirm('Logout? This will end your session.')) {
+      fetch("logout.php").finally(() => {
+        window.location.href = "rfmoto-login.html";
+      });
+    }
+  }
+</script>
+
+</body>
+</html>
